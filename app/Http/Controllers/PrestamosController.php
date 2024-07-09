@@ -25,20 +25,19 @@ class PrestamosController extends Controller
      */
     public function store(Request $request):JsonResponse
     {
-        $validatedData = $request->validate([
-            'libro_id' => 'required|exists:libros,id',
-            'usuario_id' => 'required|exists:usuarios,id',
-            'fecha_prestamo' => 'required|date',
-        ]);
-
-        // Lógica para llamar al procedimiento almacenado
-        DB::statement('CALL sp_solicitar_libro(?, ?, ?)', [
-            $validatedData['libro_id'],
-            $validatedData['usuario_id'],
-            $validatedData['fecha_prestamo'],
+         try {
+        // Ejecutar directamente el procedimiento almacenado
+        DB::select('CALL sp_solicitar_libro(?, ?, ?)', [
+            $request->input('libro_id'),
+            $request->input('usuario_id'),
+            $request->input('fecha_prestamo'),
         ]);
 
         return response()->json(['message' => 'Préstamo realizado con éxito'], 201);
+    } catch (\Exception $e) {
+        // Manejo de errores
+        return response()->json(['error' => 'Error al realizar el préstamo: ' . $e->getMessage()], 500);
+    }
     }
 
     /**
